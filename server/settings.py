@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     CACHE_TTL: int = 3600
     REQUEST_TIMEOUT: int = 15
     MAX_STREAMS: int = 10
-    PROXY_URL: str | None = None
+
 
     ENABLE_CACHE: bool = True
     ENABLE_VALIDATION: bool = True

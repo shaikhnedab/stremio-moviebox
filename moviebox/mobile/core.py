@@ -585,29 +585,29 @@ class DownloadableVideoFilesDetail(BaseContentProviderAndHelper):
 
         super().__setattr__(name, value)
 
-    def _create_params(self, subject_id: str) -> dict:
+    def _create_params(self, subject_id: str, season: int = None, episode: int = None) -> dict:
         validate_subject_id(subject_id)
 
-        return {
+        params = {
             "subjectId": subject_id,
-            # "se": season,
-            # "ep": episode,
             "resolution": self.resolution,
             "page": self.page,
             "perPage": self.per_page,
-            # "all": 0,
-            # "startPosition": 1,
-            # "endPosition": 1,
-            # "pagerMode": 0,
-            # "epFrom": 1,
-            # "epTo": 1,
         }
+        if season is not None:
+            params["se"] = season
+        if episode is not None:
+            params["all"] = 0
+            params["pagerMode"] = 0
+            params["epFrom"] = episode
+            params["epTo"] = episode
+        return params
 
     async def get_content(
-        self, subject_id: str, release_date: str = None
+        self, subject_id: str, release_date: str = None, season: int = None, episode: int = None
     ) -> dict:
 
-        request_params = self._create_params(subject_id)
+        request_params = self._create_params(subject_id, season=season, episode=episode)
 
         contents = await self.client_session.get_from_api(
             self._path,
@@ -621,9 +621,9 @@ class DownloadableVideoFilesDetail(BaseContentProviderAndHelper):
         return contents
 
     async def get_content_model(
-        self, subject_id: str, release_date: str = None
+        self, subject_id: str, release_date: str = None, season: int = None, episode: int = None
     ) -> RootDownloadableFilesDetailModel:
-        contents = await self.get_content(subject_id, release_date)
+        contents = await self.get_content(subject_id, release_date, season=season, episode=episode)
 
         modelled_contents = RootDownloadableFilesDetailModel.model_validate(
             contents

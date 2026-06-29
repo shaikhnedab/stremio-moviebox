@@ -22,7 +22,6 @@ from moviebox.mobile.constants import CustomResolutionType as CustomResolutionTy
 # Pattern to extract language from title brackets e.g. "Solo Leveling [Hindi]" or "(Hindi Dubbed)"
 TITLE_LANG_PATTERN = re.compile(r"\[([^\]]+)\]\s*$|\(([A-Za-z\s]+)\)\s*$")
 
-
 async def search_v2(title: str, year: str, is_movie: bool):
     matches = []
     try:
@@ -144,17 +143,25 @@ async def extract_streams(matches: List[dict], is_movie: bool, season: int = 1, 
             return ([], match)
 
     async def fetch_v3(match):
-        try:
-            dl = MobileVideo(match["session"], resolution=CustomResolutionTypeV3.BEST)
-            res = await dl.get_content_model(subject_id=str(match["item"].subject_id))
-            await match["session"].close()
-            return (res.list, match)
-        except Exception:
+        from moviebox.mobile.constants import CustomResolutionType as CustomResolutionTypeV3
+        resolutions_to_try = [CustomResolutionTypeV3.BEST, CustomResolutionTypeV3._720P, CustomResolutionTypeV3._480P, CustomResolutionTypeV3._360P]
+        for res_type in resolutions_to_try:
             try:
+                dl = MobileVideo(match["session"], resolution=res_type)
+                if is_movie:
+                    res = await dl.get_content_model(subject_id=str(match["item"].subject_id))
+                else:
+                    res = await dl.get_content_model(subject_id=str(match["item"].subject_id), season=season, episode=episode)
                 await match["session"].close()
-            except Exception:
-                pass
-            return ([], match)
+                return (res.list, match)
+            except Exception as e:
+                if "406" not in str(e):
+                    break
+        try:
+            await match["session"].close()
+        except Exception:
+            pass
+        return ([], match)
 
     for match in matches:
         if match["version"] == "v2":

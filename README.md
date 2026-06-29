@@ -33,7 +33,7 @@ A high-performance Stremio addon that bridges MovieBox's vast streaming catalog 
    ```
 
 3. **Configure Environment:**
-   Copy the example environment file and update it with your settings (including proxy details if needed):
+   Copy the example environment file and update it with your settings:
    ```bash
    cp .env.example .env
    ```
