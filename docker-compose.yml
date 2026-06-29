@@ -1,12 +1,9 @@
 version: '3.8'
 
 services:
-  provider-addon:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: provider-addon:latest
-    container_name: provider-stremio-addon
+  stremio-moviebox:
+    image: mesamirh/stremio-moviebox:latest
+    container_name: stremio-moviebox
     restart: unless-stopped
     ports:
       - "${PORT:-8000}:${PORT:-8000}"

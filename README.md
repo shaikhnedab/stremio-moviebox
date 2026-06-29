@@ -1,72 +1,88 @@
 # Stremio MovieBox Addon
 
-A high-performance Stremio addon that bridges MovieBox's vast streaming catalog directly to your Stremio experience. It automatically searches across multiple internal MovieBox APIs (Legacy, Web, and Mobile) to provide the highest quality streams, complete with audio dub and subtitle information.
+Watch the massive MovieBox catalog directly from Stremio! This addon bridges MovieBox's internal APIs (Legacy, Web, and Mobile) straight into your Stremio experience, serving up high-quality streams with full audio dub and subtitle support.
 
 ## Features
 
-- **Multi-API Scraping:** Concurrently queries MovieBox's v1, v2, and v3 APIs to ensure maximum stream availability.
-- **Deduplication:** Intelligently merges identical streams and groups them by resolution and audio language.
-- **Web UI Configuration:** Easily configure minimum resolutions, language priority, and UI layouts through a sleek web interface.
-- **Stremio Native:** Fully compatible with Stremio's addon system, including Cinemeta integration and robust metadata matching.
-- **Fast & Asynchronous:** Built with FastAPI and httpx for highly concurrent, non-blocking requests.
+- **Blazing Fast Searches:** Concurrently scrapes multiple MovieBox APIs so you never miss a stream.
+- **Smart Grouping:** Intelligently merges identical streams and organizes them beautifully by resolution and language.
+- **Web UI Dashboard:** Customize exactly what you want to see—set minimum resolutions, prioritize your native language, and tweak layout styles through a sleek configuration page.
+- **Stremio Native:** Fully integrates with Stremio's Cinemeta system for perfect metadata matching.
 
-## Prerequisites
+---
 
-- Python 3.11+
-- [uv](https://github.com/astral-sh/uv) (recommended for dependency management) or pip.
+## Getting Started (Recommended)
 
-## Installation
+The absolute easiest way to run the addon is using Docker. You don't need to download the source code at all.
+
+### Option A: Docker Run (Quickest)
+Just run this single command in your terminal:
+
+```bash
+docker run -d --name stremio-moviebox -p 8000:8000 --restart unless-stopped mesamirh/stremio-moviebox:latest
+```
+
+### Option B: Docker Compose
+If you prefer `docker-compose`, create a `docker-compose.yml` file anywhere on your computer with the following content:
+
+```yaml
+version: '3.8'
+services:
+  stremio-moviebox:
+    image: mesamirh/stremio-moviebox:latest
+    container_name: stremio-moviebox
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+```
+Then start it up with:
+```bash
+docker-compose up -d
+```
+
+---
+
+## How to Install in Stremio
+
+Once the Docker container is running, you need to add it to Stremio:
+
+1. Open your browser and go to: `http://127.0.0.1:8000/configure/` (or replace `127.0.0.1` with the IP address of your server).
+2. Tweak the settings to your liking (choose your preferred language, resolution limits, etc.).
+3. Click the **"Install Addon"** button at the bottom of the page to automatically link it to your Stremio app.
+
+---
+
+## For Developers (Manual Setup)
+
+If you want to modify the code or run it natively without Docker, you will need Python 3.11+.
 
 1. **Clone the repository:**
    ```bash
    git clone https://github.com/mesamirh/stremio-moviebox.git
    cd stremio-moviebox
    ```
-
-2. **Install dependencies:**
-   Using `uv`:
+2. **Install dependencies** (we recommend `uv` for speed, but `pip` works too!):
    ```bash
    uv sync
+   # OR: pip install -r requirements.txt
    ```
-   Or using pip:
+3. **Start the local server:**
    ```bash
-   pip install -r requirements.txt
+   make start
    ```
+   The Uvicorn server will boot up on `http://127.0.0.1:8000`.
 
-3. **Configure Environment:**
-   Copy the example environment file and update it with your settings:
-   ```bash
-   cp .env.example .env
-   ```
+---
 
-### Method 1: Local Server (Python)
+## Project Structure
 
-Start the local server using the Makefile:
+- **`server/`**: The FastAPI core. Manages routing, Stremio addon manifest generation, and serves the configuration Web UI.
+- **`streaming/`**: The processing engine. It translates Stremio's Cinemeta ID requests into MovieBox queries, parses the multi-API responses, filters out duplicates, and intelligently ranks streams based on user configuration.
+- **`moviebox/`**: The scraper clients. Contains the reverse-engineered API clients that securely authenticate and extract high-speed streaming links from MovieBox's v1 (Legacy), v2 (Web), and v3 (Mobile) endpoints concurrently.
+- **`web/`**: The frontend assets. Contains the HTML, CSS, and vanilla JavaScript that power the beautiful configuration dashboard.
 
-```bash
-make start
-```
-
-This will spin up a Uvicorn server on `http://127.0.0.1:8000`.
-
-### Method 2: Docker Compose
-
-You can easily run the application using Docker and Docker Compose:
-
-```bash
-docker-compose up -d
-```
-
-### Installing in Stremio
-
-To install the addon in Stremio, simply navigate to `http://127.0.0.1:8000/configure/` in your browser. From the configuration page, you can customize your preferences (resolution, language, and layout) and click the **Install Addon** button to add it directly to Stremio.
-
-## Architecture
-
-- `server/`: Contains the FastAPI application, routes, and Stremio manifest generation.
-- `streaming/`: Contains the core logic for translating Stremio's Cinemeta requests into MovieBox API calls, stream deduplication, and title formatting.
-- `moviebox/`: The reverse-engineered internal MovieBox API clients, supporting legacy (v1), web (v2), and mobile (v3) authentication and streaming extraction.
+---
 
 ## Disclaimer
 
-This addon is intended for educational purposes. It scrapes publicly available content from third-party APIs. The developers of this addon are not affiliated with MovieBox or Stremio.
+This addon is built purely for educational purposes. It scrapes publicly available content from third-party APIs. The developers of this repository are not affiliated with MovieBox or Stremio in any capacity.
