@@ -1,7 +1,8 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import httpx
 
 from server.routes import router as main_router
@@ -32,6 +33,12 @@ app.add_middleware(
 )
 
 app.include_router(main_router)
+
+@app.get("/")
+async def root():
+    return RedirectResponse(url="/configure/")
+
+app.mount("/configure", StaticFiles(directory="web", html=True), name="web")
 
 @app.get("/logo.png")
 async def get_logo():

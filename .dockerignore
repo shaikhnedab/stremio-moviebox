@@ -24,6 +24,5 @@ coverage.xml
 .github/
 docs/
 tests/
-assets/
 stremio.py
 scaffold.py

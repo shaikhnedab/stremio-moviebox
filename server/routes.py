@@ -1,10 +1,29 @@
+import json
+import base64
 from fastapi import APIRouter, Request
 from server.manifest import get_manifest, Manifest
 
 router = APIRouter()
 
+def parse_config(config_str: str) -> dict:
+    try:
+        padding = 4 - (len(config_str) % 4)
+        if padding != 4:
+            config_str += "=" * padding
+        decoded = base64.urlsafe_b64decode(config_str).decode('utf-8')
+        return json.loads(decoded)
+    except Exception:
+        return {}
+
+@router.get("/{config}/manifest.json")
+async def manifest_endpoint(request: Request, config: str) -> Manifest:
+    manifest = get_manifest()
+    base = str(request.base_url)
+    manifest.logo = base + "logo.png"
+    return manifest
+
 @router.get("/manifest.json")
-async def manifest_endpoint(request: Request) -> Manifest:
+async def manifest_endpoint_no_config(request: Request) -> Manifest:
     manifest = get_manifest()
     manifest.logo = str(request.base_url) + "logo.png"
     return manifest
@@ -19,10 +38,22 @@ from streaming.provider import find_all_matches, extract_streams
 from streaming.helpers import generate_stream_title, generate_stream_description, get_stream_filename
 from urllib.parse import quote
 
+@router.get("/{config}/stream/{type}/{id}.json")
+async def stream_endpoint_with_config(request: Request, config: str, type: Annotated[str, Path(...)], id: Annotated[str, Path(...)]):
+    return await handle_stream(request, type, id, config)
+
 @router.get("/stream/{type}/{id}.json")
 async def stream_endpoint(request: Request, type: Annotated[str, Path(...)], id: Annotated[str, Path(...)]):
+    return await handle_stream(request, type, id, "")
+
+async def handle_stream(request: Request, type: str, id: str, config_str: str):
     if type not in ["movie", "series"]:
         raise HTTPException(status_code=404, detail="Unsupported type")
+
+    config = parse_config(config_str)
+    min_res = config.get("resolution", "all")
+    pref_lang = config.get("language", "all")
+    layout = config.get("layout", "cinematic")
 
     parts = id.split(":")
     imdb_id = parts[0]
@@ -50,8 +81,18 @@ async def stream_endpoint(request: Request, type: Annotated[str, Path(...)], id:
 
     stream_results = await extract_streams(matches, type == "movie", season, episode)
     
-    # Sort by highest resolution first
-    stream_results.sort(key=lambda x: getattr(x["download"], 'resolution', 0), reverse=True)
+    def sort_key(x):
+        res = getattr(x["download"], 'resolution', 0)
+        lang_match = 0
+        audio_lang = x.get("audio_lang")
+        if pref_lang != "all":
+            if pref_lang == "orig" and not audio_lang:
+                lang_match = 1
+            elif pref_lang != "orig" and audio_lang and pref_lang.lower() in audio_lang.lower():
+                lang_match = 1
+        return (lang_match, res)
+        
+    stream_results.sort(key=sort_key, reverse=True)
     
     streams = []
     seen_urls = set()
@@ -62,7 +103,6 @@ async def stream_endpoint(request: Request, type: Annotated[str, Path(...)], id:
         subtitle_langs = stream_data["subtitle_langs"]
         
         url_str = str(dl.url)
-        # Deduplicate streams based on the URL path, ignoring query parameters
         base_dl_url = url_str.split('?')[0] if '?' in url_str else url_str
         if base_dl_url in seen_urls:
             continue
@@ -71,17 +111,38 @@ async def stream_endpoint(request: Request, type: Annotated[str, Path(...)], id:
         resolution = getattr(dl, 'resolution', 0)
         size = getattr(dl, 'size', 0)
         
+        if min_res == "4k" and resolution < 2160:
+            continue
+        elif min_res == "1080p" and resolution < 1080:
+            continue
+        elif min_res == "720p" and resolution < 720:
+            continue
+            
+        if pref_lang != "all":
+            if pref_lang == "orig" and audio_lang:
+                continue
+            elif pref_lang != "orig":
+                if not audio_lang or pref_lang.lower() not in audio_lang.lower():
+                    continue
+        
         filename = get_stream_filename(url_str)
         audio_langs_display = [audio_lang] if audio_lang else None
         
+        desc = generate_stream_description(
+            resolution,
+            size,
+            audio_langs=audio_langs_display,
+            subtitle_langs=subtitle_langs if subtitle_langs else None,
+        )
+        
+        if layout == "torrentio":
+            desc = desc.replace("\n", " | ")
+        elif layout == "badges":
+            desc = f"🎥 {resolution}p | 🔊 {audio_lang or 'Unknown'}\n{desc}"
+
         streams.append({
             "name": "MovieBox",
-            "title": generate_stream_description(
-                resolution,
-                size,
-                audio_langs=audio_langs_display,
-                subtitle_langs=subtitle_langs if subtitle_langs else None,
-            ),
+            "title": desc,
             "url": url_str,
             "behaviorHints": {
                 "notWebReady": True,
@@ -96,5 +157,3 @@ async def stream_endpoint(request: Request, type: Annotated[str, Path(...)], id:
         })
 
     return {"streams": streams}
-
-

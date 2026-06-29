@@ -29,9 +29,13 @@ async def search_v2(title: str, year: str, is_movie: bool):
         st = SubjectTypeV2.MOVIES if is_movie else SubjectTypeV2.TV_SERIES
         sv = SearchV2(s, query=title, subject_type=st, per_page=10)
         res = await sv.get_content_model()
+        count = 0
         for item in res.items:
             if not year or str(item.releaseDate.year) == str(year):
                 matches.append({"item": item, "session": s, "version": "v2"})
+                count += 1
+                if count >= 3:
+                    break
     except Exception:
         pass
     return matches
@@ -43,9 +47,13 @@ async def search_v1(title: str, year: str, is_movie: bool):
         st = SubjectTypeV1.MOVIES if is_movie else SubjectTypeV1.TV_SERIES
         sv = SearchV1(s, query=title, subject_type=st, per_page=10)
         res = await sv.get_content_model()
+        count = 0
         for item in res.items:
             if not year or str(item.releaseDate.year) == str(year):
                 matches.append({"item": item, "session": s, "version": "v1"})
+                count += 1
+                if count >= 3:
+                    break
     except Exception:
         pass
     return matches
@@ -58,9 +66,13 @@ async def search_v3(title: str, year: str, is_movie: bool):
         st = SubjectTypeV3.MOVIES if is_movie else SubjectTypeV3.TV_SERIES
         sv = SearchV3(s, query=title, subject_type=st, per_page=10)
         res = await sv.get_content_model()
+        count = 0
         for item in res.items:
             if not year or str(item.release_date.year) == str(year):
                 matches.append({"item": item, "session": s, "version": "v3"})
+                count += 1
+                if count >= 3:
+                    break
     except Exception:
         pass
     return matches
