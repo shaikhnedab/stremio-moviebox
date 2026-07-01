@@ -118,7 +118,6 @@ class ProviderHttpClient:
         )
 
     async def _init_client(self, force: bool = True):
-
         if not force:
             if self._runtime_token or AUTH_TOKEN:
                 return
@@ -152,9 +151,9 @@ class ProviderHttpClient:
 
         Returns ``(winning_base_url, response)``.
         """
-        assert self._client is not None, (
-            "Client not started - use 'async with' context."
-        )
+        assert (
+            self._client is not None
+        ), "Client not started - use 'async with' context."
 
         last_response: httpx.Response | None = None
         last_exception: Exception = Exception
@@ -236,7 +235,6 @@ class ProviderHttpClient:
         content_type: str = "application/json; charset=utf-8",
         **request_kwargs,
     ) -> tuple[str, httpx.Response]:
-
         if params:
             path = combine_url_path_with_params(path, params)
 

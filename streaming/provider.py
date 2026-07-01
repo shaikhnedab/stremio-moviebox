@@ -1,26 +1,34 @@
 import asyncio
 import re
-from typing import Optional, List, Dict, Any
+from typing import Any, Dict, List, Optional
 
-from moviebox.web.core import Search as SearchV2
-from moviebox.legacy.core import Search as SearchV1
-from moviebox.mobile.core import Search as SearchV3
-
-from moviebox.web.requests import Session as SessionV2
-from moviebox.legacy.requests import Session as SessionV1
-from moviebox.mobile.http_client import ProviderHttpClient as SessionV3
-
-from moviebox.web.constants import SubjectType as SubjectTypeV2
 from moviebox.legacy.constants import SubjectType as SubjectTypeV1
-from moviebox.mobile.constants import SubjectType as SubjectTypeV3
-
-from moviebox.web.streams import DownloadableSingleFilesDetail as WebSingle, DownloadableTVSeriesFilesDetail as WebTV
-from moviebox.legacy.streams import DownloadableMovieFilesDetail as LegacySingle, DownloadableTVSeriesFilesDetail as LegacyTV
-from moviebox.mobile.core import DownloadableVideoFilesDetail as MobileVideo
-from moviebox.mobile.constants import CustomResolutionType as CustomResolutionTypeV3
+from moviebox.legacy.core import Search as SearchV1
+from moviebox.legacy.requests import Session as SessionV1
+from moviebox.legacy.streams import (
+    DownloadableMovieFilesDetail as LegacySingle,
+    DownloadableTVSeriesFilesDetail as LegacyTV,
+)
+from moviebox.mobile.constants import (
+    CustomResolutionType as CustomResolutionTypeV3,
+    SubjectType as SubjectTypeV3,
+)
+from moviebox.mobile.core import (
+    DownloadableVideoFilesDetail as MobileVideo,
+    Search as SearchV3,
+)
+from moviebox.mobile.http_client import ProviderHttpClient as SessionV3
+from moviebox.web.constants import SubjectType as SubjectTypeV2
+from moviebox.web.core import Search as SearchV2
+from moviebox.web.requests import Session as SessionV2
+from moviebox.web.streams import (
+    DownloadableSingleFilesDetail as WebSingle,
+    DownloadableTVSeriesFilesDetail as WebTV,
+)
 
 # Pattern to extract language from title brackets e.g. "Solo Leveling [Hindi]" or "(Hindi Dubbed)"
 TITLE_LANG_PATTERN = re.compile(r"\[([^\]]+)\]\s*$|\(([A-Za-z\s]+)\)\s*$")
+
 
 async def search_v2(title: str, year: str, is_movie: bool):
     matches = []
@@ -40,6 +48,7 @@ async def search_v2(title: str, year: str, is_movie: bool):
         pass
     return matches
 
+
 async def search_v1(title: str, year: str, is_movie: bool):
     matches = []
     try:
@@ -57,6 +66,7 @@ async def search_v1(title: str, year: str, is_movie: bool):
     except Exception:
         pass
     return matches
+
 
 async def search_v3(title: str, year: str, is_movie: bool):
     matches = []
@@ -77,11 +87,12 @@ async def search_v3(title: str, year: str, is_movie: bool):
         pass
     return matches
 
-async def find_all_matches(title: str, year: str, is_movie: bool) -> List[dict]:
+
+async def find_all_matches(title: str, year: str, is_movie: bool) -> list[dict]:
     results = await asyncio.gather(
         search_v2(title, year, is_movie),
         search_v1(title, year, is_movie),
-        search_v3(title, year, is_movie)
+        search_v3(title, year, is_movie),
     )
     matches = []
     for r in results:
@@ -127,9 +138,11 @@ def extract_match_language_info(match: dict) -> dict:
     }
 
 
-async def extract_streams(matches: List[dict], is_movie: bool, season: int = 1, episode: int = 1):
+async def extract_streams(
+    matches: list[dict], is_movie: bool, season: int = 1, episode: int = 1
+):
     tasks = []
-    
+
     async def fetch_v2(match):
         try:
             if is_movie:
@@ -155,15 +168,25 @@ async def extract_streams(matches: List[dict], is_movie: bool, season: int = 1, 
             return ([], match)
 
     async def fetch_v3(match):
-        from moviebox.mobile.constants import CustomResolutionType as CustomResolutionTypeV3
-        resolutions_to_try = [CustomResolutionTypeV3.BEST, CustomResolutionTypeV3._720P, CustomResolutionTypeV3._480P, CustomResolutionTypeV3._360P]
+        resolutions_to_try = [
+            CustomResolutionTypeV3.BEST,
+            CustomResolutionTypeV3._720P,
+            CustomResolutionTypeV3._480P,
+            CustomResolutionTypeV3._360P,
+        ]
         for res_type in resolutions_to_try:
             try:
                 dl = MobileVideo(match["session"], resolution=res_type)
                 if is_movie:
-                    res = await dl.get_content_model(subject_id=str(match["item"].subject_id))
+                    res = await dl.get_content_model(
+                        subject_id=str(match["item"].subject_id)
+                    )
                 else:
-                    res = await dl.get_content_model(subject_id=str(match["item"].subject_id), season=season, episode=episode)
+                    res = await dl.get_content_model(
+                        subject_id=str(match["item"].subject_id),
+                        season=season,
+                        episode=episode,
+                    )
                 await match["session"].close()
                 return (res.list, match)
             except Exception as e:
@@ -184,15 +207,17 @@ async def extract_streams(matches: List[dict], is_movie: bool, season: int = 1, 
             tasks.append(fetch_v3(match))
 
     results = await asyncio.gather(*tasks)
-    
+
     all_streams = []
     for downloads, match in results:
         lang_info = extract_match_language_info(match)
         for dl in downloads:
-            all_streams.append({
-                "download": dl,
-                "audio_lang": lang_info["audio_lang"],
-                "subtitle_langs": lang_info["subtitle_langs"]
-            })
-            
+            all_streams.append(
+                {
+                    "download": dl,
+                    "audio_lang": lang_info["audio_lang"],
+                    "subtitle_langs": lang_info["subtitle_langs"],
+                }
+            )
+
     return all_streams

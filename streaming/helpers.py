@@ -1,5 +1,5 @@
-from urllib.parse import urlparse
 import re
+from urllib.parse import urlparse
 
 FILE_EXT_PATTERN = re.compile(r".+\.(\w+)\?.+")
 
@@ -24,7 +24,9 @@ def _format_resolution(resolution: int) -> str:
         return f"{resolution}p"
 
 
-def generate_stream_title(resolution: int, size: int, audio_langs: list[str] = None) -> str:
+def generate_stream_title(
+    resolution: int, size: int, audio_langs: list[str] = None
+) -> str:
     """Generate a clean stream title with resolution and optional audio language."""
     res_str = _format_resolution(resolution)
     size_str = _format_size(size)

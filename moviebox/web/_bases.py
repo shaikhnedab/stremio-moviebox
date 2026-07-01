@@ -43,7 +43,6 @@ class BaseItemDetails(BaseContentProviderAndHelper):
     async def get_content_model(
         self, detail_path: str, **kwargs
     ) -> SpecificItemDetailsModel:
-
         content = await self.get_content(detail_path, **kwargs)
         modelled_content = SpecificItemDetailsModel(**content)
 

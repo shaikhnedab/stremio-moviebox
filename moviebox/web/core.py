@@ -65,7 +65,6 @@ class ContentCategory(BaseContentProviderAndHelper):
         self._per_page = per_page
 
     def __setattr__(self, name, value):
-
         match name:
             case "session":
                 assert_instance(value, Session, "session")
@@ -80,9 +79,9 @@ class ContentCategory(BaseContentProviderAndHelper):
                 )
 
             case "_genre_top_id":
-                assert validate_genre_top_id(value), (
-                    f"Invalid value for _genre_top_id {value!r}"
-                )
+                assert validate_genre_top_id(
+                    value
+                ), f"Invalid value for _genre_top_id {value!r}"
 
             case _:
                 pass
@@ -162,7 +161,6 @@ class ContentCategory(BaseContentProviderAndHelper):
     async def get_content_model_all(
         self,
     ) -> AsyncIterator[RealContentCategoryModel]:
-
         navigating = True
 
         cursor = self
@@ -392,7 +390,6 @@ class SearchWithFilter(Search):
     async def get_content_model_all(
         self,
     ) -> AsyncIterator[SearchResultsModel]:
-
         navigating = True
 
         cursor = self
@@ -444,7 +441,6 @@ class ItemDetails(BaseItemDetails):
     async def get_content_model(
         self, path_or_item: str | SearchResultsItem, **kwargs
     ) -> SpecificItemDetailsModel:
-
         content = await self.get_content(path_or_item, **kwargs)
         return SpecificItemDetailsModel(**content)
 
@@ -490,7 +486,6 @@ class SingleItemDetails(BaseItemDetails):
     async def get_content_model(
         self, path_or_item: str | SearchResultsItem, **kwargs
     ) -> SpecificItemDetailsModel:
-
         content = await self.get_content(path_or_item, **kwargs)
         return SpecificItemDetailsModel(**content)
 
@@ -539,6 +534,5 @@ class TVSeriesDetails(BaseItemDetails):
     async def get_content_model(
         self, path_or_item: str | SearchResultsItem, **kwargs
     ) -> SpecificItemDetailsModel:
-
         content = await self.get_content(path_or_item, **kwargs)
         return SpecificItemDetailsModel(**content)

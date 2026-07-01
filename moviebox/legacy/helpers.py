@@ -9,10 +9,10 @@ from urllib.parse import urljoin
 
 import httpx
 
-from moviebox.utils import get_event_loop
 from moviebox.legacy.constants import HOST_URL, ITEM_DETAILS_PATH
 from moviebox.legacy.exceptions import UnsuccessfulResponseError
 from moviebox.legacy.logger import logger
+from moviebox.utils import get_event_loop
 
 FILE_EXT_PATTERN = re.compile(r".+\.(\w+)\?.+")
 

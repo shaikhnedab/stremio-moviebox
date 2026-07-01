@@ -114,7 +114,6 @@ class Search(BaseContentProviderAndHelper):
         page: int = 1,
         per_page: int = RESULTS_PER_PAGE_AMOUNT,
     ):
-
         self.client_session = client_session
         self._subject_type = subject_type
         self._query = query
@@ -250,7 +249,6 @@ class Search(BaseContentProviderAndHelper):
     async def get_content_model_all(
         self,
     ) -> AsyncIterator[RootSearchResultsModel]:
-
         navigating = True
 
         cursor = self
@@ -281,7 +279,6 @@ class SearchV2(BaseContentProviderAndHelper):
         page: int = 1,
         per_page: int = RESULTS_PER_PAGE_AMOUNT,
     ):
-
         self.client_session = client_session
         self._subject_type = subject_type
         self._query = query
@@ -428,7 +425,6 @@ class SearchV2(BaseContentProviderAndHelper):
     async def get_content_model_all(
         self,
     ) -> AsyncIterator[RootSearchResultsModelV2]:
-
         navigating = True
 
         cursor = self
@@ -585,7 +581,9 @@ class DownloadableVideoFilesDetail(BaseContentProviderAndHelper):
 
         super().__setattr__(name, value)
 
-    def _create_params(self, subject_id: str, season: int = None, episode: int = None) -> dict:
+    def _create_params(
+        self, subject_id: str, season: int = None, episode: int = None
+    ) -> dict:
         validate_subject_id(subject_id)
 
         params = {
@@ -604,10 +602,15 @@ class DownloadableVideoFilesDetail(BaseContentProviderAndHelper):
         return params
 
     async def get_content(
-        self, subject_id: str, release_date: str = None, season: int = None, episode: int = None
+        self,
+        subject_id: str,
+        release_date: str = None,
+        season: int = None,
+        episode: int = None,
     ) -> dict:
-
-        request_params = self._create_params(subject_id, season=season, episode=episode)
+        request_params = self._create_params(
+            subject_id, season=season, episode=episode
+        )
 
         contents = await self.client_session.get_from_api(
             self._path,
@@ -621,9 +624,15 @@ class DownloadableVideoFilesDetail(BaseContentProviderAndHelper):
         return contents
 
     async def get_content_model(
-        self, subject_id: str, release_date: str = None, season: int = None, episode: int = None
+        self,
+        subject_id: str,
+        release_date: str = None,
+        season: int = None,
+        episode: int = None,
     ) -> RootDownloadableFilesDetailModel:
-        contents = await self.get_content(subject_id, release_date, season=season, episode=episode)
+        contents = await self.get_content(
+            subject_id, release_date, season=season, episode=episode
+        )
 
         modelled_contents = RootDownloadableFilesDetailModel.model_validate(
             contents
@@ -691,7 +700,6 @@ class DownloadableVideoFilesDetail(BaseContentProviderAndHelper):
     async def get_content_model_all(
         self, subject_id: str
     ) -> AsyncIterator[RootDownloadableFilesDetailModel]:
-
         navigating = True
 
         cursor = self
@@ -737,7 +745,6 @@ class DownloadableCaptionFileDetails(BaseContentProviderAndHelper):
         subject_id: str,
         resource: VideoFileMetadata | str,
     ) -> dict[str, str]:
-
         validate_subject_id(subject_id)
 
         return {
@@ -754,7 +761,6 @@ class DownloadableCaptionFileDetails(BaseContentProviderAndHelper):
         subject_id: str,
         resource: VideoFileMetadata | str,
     ) -> dict[str, Any]:
-
         request_params = self._create_params(subject_id, resource)
 
         resp = await self.client_session.get_from_api(

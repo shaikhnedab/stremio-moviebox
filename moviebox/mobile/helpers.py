@@ -40,9 +40,9 @@ def validate_subject_id(subject_id: str) -> bool:
 
 
 def validate_per_page_and_raise(per_page: int) -> None:
-    assert 0 < per_page <= SEARCH_PER_PAGE_LIMIT, (
-        f"per_page value {per_page} is NOT between 0 and {SEARCH_PER_PAGE_LIMIT}"
-    )
+    assert (
+        0 < per_page <= SEARCH_PER_PAGE_LIMIT
+    ), f"per_page value {per_page} is NOT between 0 and {SEARCH_PER_PAGE_LIMIT}"
 
 
 @dataclass
@@ -163,7 +163,6 @@ def get_dub_or_raise(
     item_details: RootItemDetailsModel,
     language_name_or_code: str = DEFAULT_DUB_LANGUAGE_NAME_OR_CODE,
 ) -> DubModel:
-
     lan_names = []
     lan_codes = []
 

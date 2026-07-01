@@ -1,29 +1,42 @@
 """For finding downloadable media files
 and initiating actual download
 """
-from abc import ABCMeta
-from moviebox.legacy._bases import BaseContentProviderAndHelper
 
+from abc import ABCMeta
+
+from moviebox.legacy._bases import BaseContentProviderAndHelper
 from moviebox.legacy.helpers import assert_instance
 from moviebox.legacy.models import DownloadableFilesMetadata
 from moviebox.web.constants import SubjectType
 from moviebox.web.helpers import get_absolute_url
 from moviebox.web.models import SearchResultsItem
 from moviebox.web.requests import Session
-__all__ = ['DownloadableSingleFilesDetail', 'DownloadableMovieFilesDetail', 'DownloadableMusicFilesDetail', 'DownloadableAnimeFilesDetail', 'DownloadableEducationFilesDetail', 'DownloadableTVSeriesFilesDetail']
+
+__all__ = [
+    "DownloadableSingleFilesDetail",
+    "DownloadableMovieFilesDetail",
+    "DownloadableMusicFilesDetail",
+    "DownloadableAnimeFilesDetail",
+    "DownloadableEducationFilesDetail",
+    "DownloadableTVSeriesFilesDetail",
+]
+
 
 class ImmutableMeta(ABCMeta):
-
     def __setattr__(cls, name, value):
-        if name == '_subject_types':
-            raise AttributeError('_subject_types is immutable')
+        if name == "_subject_types":
+            raise AttributeError("_subject_types is immutable")
         super().__setattr__(name, value)
 
-class BaseDownloadableFilesDetail(BaseContentProviderAndHelper, metaclass=ImmutableMeta):
+
+class BaseDownloadableFilesDetail(
+    BaseContentProviderAndHelper, metaclass=ImmutableMeta
+):
     """Base class for fetching and modelling downloadable files detail"""
-    _url = get_absolute_url('/wefeed-h5api-bff/subject/download')
+
+    _url = get_absolute_url("/wefeed-h5api-bff/subject/download")
     _subject_types: tuple[SubjectType] = None
-    'Enforce item to be of this subjectType(s). Defaults to None'
+    "Enforce item to be of this subjectType(s). Defaults to None"
 
     def __init__(self, session: Session, item: SearchResultsItem):
         """Constructor for `BaseDownloadableFilesDetail`
@@ -33,11 +46,14 @@ class BaseDownloadableFilesDetail(BaseContentProviderAndHelper, metaclass=Immuta
             item (SearchResultsItem): Movie/TVSeries item
                 to handle
         """
-        assert_instance(session, Session, 'session')
-        assert_instance(item, SearchResultsItem, 'item')
+        assert_instance(session, Session, "session")
+        assert_instance(item, SearchResultsItem, "item")
         if self._subject_types is not None:
             if item.subjectType not in self._subject_types:
-                raise ValueError(f'item needs to be /any/ of the subjectType(s) {self._subject_types!r}', f'not {item.subjectType!r}')
+                raise ValueError(
+                    f"item needs to be /any/ of the subjectType(s) {self._subject_types!r}",
+                    f"not {item.subjectType!r}",
+                )
         self.session = session
         self._item = item
 
@@ -50,7 +66,12 @@ class BaseDownloadableFilesDetail(BaseContentProviderAndHelper, metaclass=Immuta
         Returns:
             t.Dict: Request params
         """
-        return {'subjectId': self._item.subjectId, 'se': season, 'ep': episode, 'detailPath': self._item.detailPath}
+        return {
+            "subjectId": self._item.subjectId,
+            "se": season,
+            "ep": episode,
+            "detailPath": self._item.detailPath,
+        }
 
     async def get_content(self, season: int, episode: int) -> dict:
         """Performs the actual fetching of files detail.
@@ -62,10 +83,14 @@ class BaseDownloadableFilesDetail(BaseContentProviderAndHelper, metaclass=Immuta
         Returns:
             t.Dict: File details
         """
-        content = await self.session.get_from_api(url=self._url, params=self._create_request_params(season, episode))
+        content = await self.session.get_from_api(
+            url=self._url, params=self._create_request_params(season, episode)
+        )
         return content
 
-    async def get_content_model(self, season: int, episode: int) -> DownloadableFilesMetadata:
+    async def get_content_model(
+        self, season: int, episode: int
+    ) -> DownloadableFilesMetadata:
         """Get modelled version of the downloadable files detail.
 
         Args:
@@ -78,9 +103,16 @@ class BaseDownloadableFilesDetail(BaseContentProviderAndHelper, metaclass=Immuta
         contents = await self.get_content(season, episode)
         return DownloadableFilesMetadata(**contents)
 
+
 class DownloadableSingleFilesDetail(BaseDownloadableFilesDetail):
     """Fetches and model movie/music/anime/education files detail"""
-    _subject_types = (SubjectType.MOVIES, SubjectType.ANIME, SubjectType.MUSIC, SubjectType.EDUCATION)
+
+    _subject_types = (
+        SubjectType.MOVIES,
+        SubjectType.ANIME,
+        SubjectType.MUSIC,
+        SubjectType.EDUCATION,
+    )
 
     async def get_content(self) -> dict:
         """Actual fetch of files detail"""
@@ -90,8 +122,14 @@ class DownloadableSingleFilesDetail(BaseDownloadableFilesDetail):
         """Modelled version of the files detail"""
         contents = await self.get_content()
         return DownloadableFilesMetadata(**contents)
-DownloadableMovieFilesDetail = DownloadableMusicFilesDetail = DownloadableAnimeFilesDetail = DownloadableEducationFilesDetail = DownloadableSingleFilesDetail
+
+
+DownloadableMovieFilesDetail = DownloadableMusicFilesDetail = (
+    DownloadableAnimeFilesDetail
+) = DownloadableEducationFilesDetail = DownloadableSingleFilesDetail
+
 
 class DownloadableTVSeriesFilesDetail(BaseDownloadableFilesDetail):
     """Fetches and model tv-series files detail"""
+
     _subject_types = (SubjectType.TV_SERIES,)

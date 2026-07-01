@@ -16,6 +16,7 @@ Watch the massive MovieBox catalog directly from Stremio! This addon bridges Mov
 The absolute easiest way to run the addon is using Docker. You don't need to download the source code at all.
 
 ### Option A: Docker Run (Quickest)
+
 Just run this single command in your terminal:
 
 ```bash
@@ -23,10 +24,11 @@ docker run -d --name stremio-moviebox -p 8000:8000 --restart unless-stopped mesa
 ```
 
 ### Option B: Docker Compose
+
 If you prefer `docker-compose`, create a `docker-compose.yml` file anywhere on your computer with the following content:
 
 ```yaml
-version: '3.8'
+version: "3.8"
 services:
   stremio-moviebox:
     image: mesamirh/stremio-moviebox:latest
@@ -35,9 +37,22 @@ services:
     ports:
       - "8000:8000"
 ```
+
 Then start it up with:
+
 ```bash
 docker-compose up -d
+```
+
+### Option C: Build the Docker Image Locally
+
+If you want to build the absolute latest version of the image from the source code, run the following commands:
+
+```bash
+git clone https://github.com/mesamirh/stremio-moviebox.git
+cd stremio-moviebox
+docker build -t mesamirh/stremio-moviebox:latest .
+docker run -d --name stremio-moviebox -p 8000:8000 --restart unless-stopped mesamirh/stremio-moviebox:latest
 ```
 
 ---

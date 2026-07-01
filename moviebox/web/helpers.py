@@ -11,7 +11,6 @@ VALID_GENRE_TOP_ID_PATTERN = re.compile(r"^\d{17,19}$")
 
 
 def get_absolute_url(relative_url: str, base_url: str = HOST_URL):
-
     return moviebox.legacy.helpers.get_absolute_url(relative_url, base_url)
 
 
