@@ -29,7 +29,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Proactive Fix: Securely converts repository string to lowercase to avoid GHCR upload rejections
+      # Converts repository string to lowercase to prevent GHCR upload rejections
       - name: Format Repository Name to Lowercase
         id: string
         run: |
@@ -42,7 +42,6 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ steps.string.outputs.image_name }}
           tags: |
             type=raw,value=latest
-            type=sha,format=short
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
