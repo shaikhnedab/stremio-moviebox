@@ -7,8 +7,8 @@ services:
     
     # 2. We change 'ports' to 'expose' because your reverse proxy will handle external traffic.
     # This keeps the port hidden from the public internet except through your proxy.
-    expose:
-      - "${PORT:-8000}"
+    ports:
+      - "${PORT:-8000}:${PORT:-8000}"
       
     environment:
       - PORT=${PORT:-8000}
